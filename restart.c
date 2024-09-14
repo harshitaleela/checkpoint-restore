@@ -45,6 +45,8 @@ void stack_unmap()
                 		perror("munmap");
                 		exit(1);
             		}
+			dup2(tmp_stdin, 0);
+        		close(tmp_stdin);
 			return;
 		}
 	 }
