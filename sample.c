@@ -6,12 +6,9 @@ int main()
 	int i=0;
 	while (1)
 	{
+		sleep(1);
+		printf("%d\n", i);
 		i++;
-		if(i%100000 == 0)
-		{
-			sleep(5);
-			printf("%d\n", i);
-		}
 	}
 	return 0;
 }

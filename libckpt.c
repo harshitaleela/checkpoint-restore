@@ -116,16 +116,17 @@ void save_ckpt()
 }
 
 
-void signal_handler(int signal)
+static int is_restart;
+void signal_handler_work(int sig)
 {
 //	printf("signal received\n");
-	static int is_restart;
 	is_restart = 0;
 	getcontext(&context);
 
 	if (is_restart == 1)
-	{
-		is_restart = 0;
+	{		
+		//signal(SIGUSR2, &signal_handler);
+		//is_restart = 0;
 		//while(1);
 		return;
 	}	
@@ -137,6 +138,15 @@ void signal_handler(int signal)
 	}
 }
 
+void signal_handler(int sig)
+{
+	signal_handler_work(sig);
+	if (is_restart == 1)
+	{		
+		is_restart = 0;
+		return;
+	}	
+}
 
 void __attribute__((constructor))
 myconstructor()
