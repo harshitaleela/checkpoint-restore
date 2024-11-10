@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-fno-stack-protector -fPIC -DPIC -D_FORTIFY_SOURCE=0 -g -O0
+CFLAGS=-fno-stack-protector -fPIC -DPIC -D_FORTIFY_SOURCE=0 -g -O0 -std=gnu99
+
 
 all: ckpt restart readckpt sample libckpt.so
 
@@ -13,9 +14,15 @@ ckpt: ckpt.c
 libckpt.so: libckpt.c
 	${CC} ${CFLAGS} -shared -o $@ $<
 
-restart:
-	gcc ${CFLAGS} -static -o restart restart.c \
-       -Wl,-Ttext-segment=5000000 -Wl,-Tdata=5100000 -Wl,-Tbss=5200000
+RESTART_FLAGS= -Wl,-Ttext-segment=5000000 -Wl,-Tdata=5100000 -Wl,-Tbss=5200000 --no-relax
+RESTART_FLAGS= -Wl,-Ttext-segment=500000000000 -Wl,-Tdata=500000100000 -Wl,-Tbss=500000200000 -Wl,--no-relax
+
+RESTART_FLAGS= 
+restart.o: restart.c
+	${CC} ${CFLAGS} -c -o $@ $<
+
+restart: restart.o
+	${CC} ${CFLAGS} -static -o $@ $< ${RESTART_FLAGS}
 
 readckpt: readckpt.c
 	${CC} ${CFLAGS} -o $@ $<
@@ -31,4 +38,4 @@ check: clean all
 	./restart
 
 clean: 
-	rm -f sample ckpt restart readckpt libckpt.so myckpt
+	rm -f *.o *.so sample ckpt restart readckpt myckpt auxval size

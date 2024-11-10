@@ -5,16 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/mman.h>
-
-struct ckpt_segment {
-    void *start;
-    void *end;
-    int read, write, execute;
-    int is_context;
-    int data_size;
-    char name[80];
-    int is_canary;
-};
+#include "ckpt.h"
 
 void print_segment_info(struct ckpt_segment *seg) {
     printf("Segment: %s\n", seg->name);
@@ -26,7 +17,9 @@ void print_segment_info(struct ckpt_segment *seg) {
            seg->execute ? "x" : "-");
     printf("Data Size: %d bytes\n", seg->data_size);
     printf("Is Context: %s\n", seg->is_context ? "Yes" : "No");
-    printf("Is Canary: %s\n", seg->is_canary ? "Yes" : "No");
+ //   printf("Is Canary: %s\n", seg->is_canary ? "Yes" : "No");
+    printf("Offset: %ld\n", seg->offset);
+
 }
 
 void read_checkpoint(const char *filename) {
@@ -39,9 +32,9 @@ void read_checkpoint(const char *filename) {
 
     struct ckpt_segment seg;
     while (read(ckpt_fd, &seg, sizeof(seg)) > 0) {
-        print_segment_info(&seg);
-	printf("\n################ %d ##################\n", i++);
-
+        printf("\n################ %d ##################\n", i++);
+	print_segment_info(&seg);
+	
         // Reading the data of the segment
         void *data = malloc(seg.data_size);
         if (data == NULL) {
