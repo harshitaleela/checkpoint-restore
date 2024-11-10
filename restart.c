@@ -11,39 +11,6 @@
 #include <sys/mman.h>
 #include "ckpt.h"
 
-void restore_vdso1(size_t size, void *s)
-{
-	void *orig_vdso_addr = s; // preckpt
-	void *new_vdso_addr; // restart
-	void *temp_vdso_addr; // newly mapped addr
-
- 	 int proc_maps_fd = open("/proc/self/maps", O_RDONLY);
-         unsigned long int start, end;
-         char filename[80] = " ";
-         char rwxp[4];
-         char tmp[10]; 
-         int rc = -2;
-         int tmp_stdin = dup(0);
-         dup2(proc_maps_fd, 0);
-  
-         for (int i=0; rc!=EOF; i++)
-         {
-                rc = scanf("%lx-%lx %4c %*s %*s %*[0-9 ]%[^\n]\n",
-                               &start, &end, rwxp, filename);
-                assert(fseek(stdin, 0, SEEK_CUR) == 0);
-                if (strstr(filename, "vdso"))
-                {
-                        new_vdso_addr = (void *)start;
-                        dup2(tmp_stdin, 0);
-                        close(tmp_stdin);
-                        return;
-                }
-         }
-	temp_vdso_addr = mmap((void *)0x6020000, size,PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_ANONYMOUS, -1, 0);
-	mremap(new_vdso_addr, size, size, MREMAP_FIXED, temp_vdso_addr);
-	mremap(temp_vdso_addr, size, size, MREMAP_FIXED, orig_vdso_addr);
-}
-
 void restore_vdso(size_t size, void *orig_vdso_addr)
 {
 	void *new_vdso_addr;
