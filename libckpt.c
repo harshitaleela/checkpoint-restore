@@ -96,12 +96,13 @@ void save_ckpt()
 	{
 		rc = match_one_line(proc_maps_fd, &header[i]);
 
-		if (strstr(header[i].name, "[vsyscall]") || strstr(header[i].name, "[vvar]") || (header[i].read==0))
+		if (strstr(header[i].name, "[vsyscall]") || (header[i].read==0))
 		{	continue;
 		}
 
 		write(ckpt_fd, &header[i], sizeof(header[i]));
-		write(ckpt_fd, (void *)header[i].start, header[i].data_size);
+		if(!(strstr(header[i].name, "[vvar]") || strstr(header[i].name, "[vdso]")))
+			write(ckpt_fd, (void *)header[i].start, header[i].data_size);
 	}
 
 
@@ -131,7 +132,7 @@ void signal_handler_work(int sig)
 	fflush(stdout);
 	if (is_restart == 1)
 	{	
-//		print_registers(context, "post-ckpt");	
+		print_registers(context, "post-ckpt");	
 //		print_maps();
 		//signal(SIGUSR2, &signal_handler);
 		is_restart = 0;
@@ -148,7 +149,7 @@ void signal_handler_work(int sig)
 		print_registers(context, "pre-ckpt");
 		//print_maps();
 		is_restart = 1;
-		//print_registers(context, "pre-ckpt");
+		print_registers(context, "pre-ckpt");
 		save_ckpt();
 	}
 }

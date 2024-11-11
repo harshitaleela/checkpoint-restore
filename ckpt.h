@@ -55,8 +55,8 @@ int match_one_line(int proc_maps_fd, struct ckpt_segment *proc_maps_line)
   	int rc = sscanf(line, "%lx-%lx %4c %lx %x:%x %ld %[^\n]",
                  	&start, &end, rwxp, &offset, &deviceMajor, &deviceMinor, &inode, proc_maps_line->name);
 
-	printf("filename: <%s>\n", proc_maps_line->name);
-	printf("offset: <%lx>\n", offset);
+//	printf("filename: <%s>\n", proc_maps_line->name);
+//	printf("offset: <%lx>\n", offset);
 //	printf("data read\n");
 	proc_maps_line -> start = (void *)start;
   	proc_maps_line -> end = (void *)end;

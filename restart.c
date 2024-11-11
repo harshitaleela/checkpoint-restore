@@ -51,6 +51,46 @@ void restore_vdso(size_t size, void *orig_vdso_addr)
 
 }
 
+void restore_vvar(size_t size, void *orig_vdso_addr)
+{
+        void *new_vvar_addr;
+        void *tmp_vvar_addr;
+        int proc_maps_fd = open("/proc/self/maps", O_RDONLY);
+        int i, rc;
+        struct ckpt_segment line;
+        for (i=0; rc!=EOF; i++)
+        {
+                rc = match_one_line(proc_maps_fd, &line);
+                if(strstr(line.name, "vvar"))
+                {
+                        new_vvar_addr = line.start;
+                }
+        }
+        close(proc_maps_fd);
+        tmp_vvar_addr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (tmp_vvar_addr == MAP_FAILED)
+        {
+            perror("mmap");
+            return;
+        }
+
+        if (mremap(new_vvar_addr, size, size, MREMAP_MAYMOVE|MREMAP_FIXED, tmp_vvar_addr) == MAP_FAILED)
+        {
+            perror("first mremap failed");
+            munmap(tmp_vvar_addr, size);  // Clean up on failure
+            return;
+        }
+
+        if (mremap(tmp_vvar_addr, size, size, MREMAP_MAYMOVE|MREMAP_FIXED, orig_vdso_addr) == MAP_FAILED)
+        {
+            perror("second mremap failed");
+            munmap(tmp_vvar_addr, size);  // Clean up on failure
+            return;
+        }
+        munmap(tmp_vvar_addr, size);
+
+}
+
 void stack_unmap()
 {
 	int proc_maps_fd = open("/proc/self/maps", O_RDONLY);
@@ -120,8 +160,15 @@ void restart()
 	    } 
 	    else if(strstr(header[i].name, "vdso"))
 	    {
+		    printf("Restoring VDSO\n");
 		    restore_vdso(header[i].data_size, header[i].start);
 	    }
+	    else if(strstr(header[i].name, "vvar"))
+            {
+                    printf("Restoring VVAR\n");
+                    restore_vvar(header[i].data_size, header[i].start);
+            }
+
 	    else {
 	    }
 
@@ -130,26 +177,30 @@ void restart()
 	    if(header[i].write) prot|=PROT_WRITE;
 	    if(header[i].execute) prot|=PROT_EXEC;
 
-            void *addr = mmap(header[i].start, header[i].data_size,
+            if(!(strstr(header[i].name, "vvar") || strstr(header[i].name, "vdso")))
+	    {
+		        void *addr = mmap(header[i].start, header[i].data_size,
 			      prot, flags, mapfd, offset);
-	    if (mapfd != -1) {
-		    close(mapfd);
-	    }
+	    		if (mapfd != -1) 
+			{
+		    		close(mapfd);
+	    		}
 
-            if (addr == MAP_FAILED)
-            {
-                perror("mmap");
-                exit(1);
-            }
+            		if (addr == MAP_FAILED)
+            		{
+                		perror("mmap");
+                		exit(1);
+            		}
 
-            rc = read(fd, (char *)addr, header[i].data_size);
-            while (rc < header[i].data_size)
-            {
-                int ret = read(fd, (char *)addr + rc, header[i].data_size - rc);
-		assert(ret != -1);
-                rc += ret;
+            		rc = read(fd, (char *)addr, header[i].data_size);
+            		while (rc < header[i].data_size)
+            		{
+                		int ret = read(fd, (char *)addr + rc, header[i].data_size - rc);
+				assert(ret != -1);
+                		rc += ret;
+            		}
             }
-        }
+	}
 
         i++;
         rc = read(fd, &header[i], sizeof(header[i]));  // Read the next segment
@@ -162,13 +213,13 @@ void restart()
     perror("setcontext");
 }
 
-void recursive(int level)
-{
-    if (level > 0)
-        recursive(level - 1);
-    else
-        restart();
-}
+//void recursive(int level)
+//{
+//    if (level > 0)
+//        recursive(level - 1);
+//    else
+//        restart();
+//}
 
 void map_memory()
 {
