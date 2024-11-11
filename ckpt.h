@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <stdio.h>
+#include <ucontext.h>
 #ifndef __CKPT_H__
 #define __CKPT_H__
 struct ckpt_segment
@@ -68,4 +70,42 @@ int match_one_line(int proc_maps_fd, struct ckpt_segment *proc_maps_line)
 	proc_maps_line -> is_context = 0;
   	return 0;
 }
+void print_registers(ucontext_t context, const char *stage) {
+    printf("---- %s Register State ----\n", stage);
+
+    // General-purpose registers for x86-64 architecture
+    printf("RIP: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RIP]); fflush(stdout);
+    printf("RSP: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RSP]); fflush(stdout);
+    printf("RBP: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RBP]); fflush(stdout);
+    printf("RAX: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RAX]); fflush(stdout);
+    printf("RBX: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RBX]); fflush(stdout);
+    printf("RCX: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RCX]); fflush(stdout);
+    printf("RDX: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RDX]); fflush(stdout);
+    printf("RSI: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RSI]); fflush(stdout);
+    printf("RDI: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_RDI]); fflush(stdout);
+    printf("R8:  %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R8]);  fflush(stdout);
+    printf("R9:  %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R9]);  fflush(stdout);
+    printf("R10: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R10]); fflush(stdout);
+    printf("R11: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R11]); fflush(stdout);
+    printf("R12: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R12]); fflush(stdout);
+    printf("R13: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R13]); fflush(stdout);
+    printf("R14: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R14]); fflush(stdout);
+    printf("R15: %llx\n", (unsigned long long)context.uc_mcontext.gregs[REG_R15]); fflush(stdout);
+}
+
+void print_segment_info(struct ckpt_segment *seg) {
+    printf("------------------------------------------------------");
+    printf("Segment: %s\n", seg->name);		fflush(stdout);
+    printf("Start Address: %p\n", seg->start);	fflush(stdout);
+    printf("End Address: %p\n", seg->end);	fflush(stdout);
+    printf("Permissions: %s%s%s\n",
+           seg->read ? "r" : "-",
+           seg->write ? "w" : "-",
+           seg->execute ? "x" : "-");		fflush(stdout);
+    printf("Data Size: %d bytes\n", seg->data_size); fflush(stdout);
+    printf("Is Context: %s\n", seg->is_context ? "Yes" : "No"); fflush(stdout);
+//    printf("Is Canary: %s\n", seg->is_canary ? "Yes" : "No"); fflush(stdout);
+}
+
+
 #endif
