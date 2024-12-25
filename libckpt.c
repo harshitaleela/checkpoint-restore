@@ -70,9 +70,7 @@ void save_ckpt()
 
 
 	
-//	printf("Memory segments saved");
 	header[i].data_size = sizeof(ucontext_t);
-	//header.name = "context";
 	strncpy(header[i].name, "context", strlen("context")+1);
 	header[i].is_context = 1;
 	write(ckpt_fd, &header[i], sizeof(header[i]));
@@ -84,51 +82,29 @@ void save_ckpt()
 }
 
 
-void signal_handler_work(int sig)
+void signal_handler(int sig)
 {
-//	printf("signal received\n");
 	static int is_restart;
 	is_restart = 0;
 	unsigned long int fsBase;
        
-        
-//	int i=10;
 	getcontext(&context);
 	
-//	fflush(stdout);
 	if (is_restart == 1)
 	{	
-//		print_registers(context, "post-ckpt");	
-//		print_maps();
-		//signal(SIGUSR2, &signal_handler);
 		is_restart = 0;
 		arch_prctl(ARCH_SET_FS, fsBase);
-//		print_registers(context, "pre-ckpt");
-//		fflush(stdout);
-//		while(dummy);
-//		printf("%d\n", i);
-//		fflush(stdout);
 		return;
 	}	
 
 	else
 	{
-//		print_registers(context, "pre-ckpt");
-		//print_maps();
 		arch_prctl(ARCH_GET_FS, &fsBase);
 		is_restart = 1;
-//		print_registers(context, "pre-ckpt");
 		save_ckpt();
 	}
 }
 
-void signal_handler(int sig)
-{
-	signal_handler_work(sig);
-//	printf("Returned from signal_handler_work\n");
-//	fflush(stdout);
-	while(dummy);
-}
 
 void __attribute__((constructor))
 myconstructor()
