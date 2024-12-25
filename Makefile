@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-fno-stack-protector -fPIC -DPIC -D_FORTIFY_SOURCE=0 -g -O0 -std=gnu99
+CFLAGS= -fno-stack-protector -fPIC -DPIC -D_FORTIFY_SOURCE=0 -g3 -O0 -std=gnu99
 
 
 all: ckpt restart readckpt sample libckpt.so

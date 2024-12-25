@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include "ckpt.h"
+#include <asm/prctl.h>
 
 ucontext_t context;
 int dummy = 0;
@@ -88,16 +89,20 @@ void signal_handler_work(int sig)
 //	printf("signal received\n");
 	static int is_restart;
 	is_restart = 0;
+	unsigned long int fsBase;
+       
+        
 //	int i=10;
 	getcontext(&context);
 	
-	fflush(stdout);
+//	fflush(stdout);
 	if (is_restart == 1)
 	{	
-		print_registers(context, "post-ckpt");	
+//		print_registers(context, "post-ckpt");	
 //		print_maps();
 		//signal(SIGUSR2, &signal_handler);
 		is_restart = 0;
+		arch_prctl(ARCH_SET_FS, fsBase);
 //		print_registers(context, "pre-ckpt");
 //		fflush(stdout);
 //		while(dummy);
@@ -108,10 +113,11 @@ void signal_handler_work(int sig)
 
 	else
 	{
-		print_registers(context, "pre-ckpt");
+//		print_registers(context, "pre-ckpt");
 		//print_maps();
+		arch_prctl(ARCH_GET_FS, &fsBase);
 		is_restart = 1;
-		print_registers(context, "pre-ckpt");
+//		print_registers(context, "pre-ckpt");
 		save_ckpt();
 	}
 }
@@ -119,8 +125,8 @@ void signal_handler_work(int sig)
 void signal_handler(int sig)
 {
 	signal_handler_work(sig);
-	printf("Returned from signal_handler_work\n");
-	fflush(stdout);
+//	printf("Returned from signal_handler_work\n");
+//	fflush(stdout);
 	while(dummy);
 }
 
