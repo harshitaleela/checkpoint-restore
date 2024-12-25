@@ -19,6 +19,8 @@ successive counts.
 _What works:_ The program is successfully able to write to a checkpoint file and restart from 
 	      the saved checkpoint after reading from the file.
 
-_What does not work:_ The program still detects stack smashing on WSL2, even after using the flag.
+_What did not work:_ The program was still detecting stack smashing, even after using the -fno-stack-protector flag.
+
+_Fix:_ Restore the fsBase register as well.
 
 **************************************************************************************************
